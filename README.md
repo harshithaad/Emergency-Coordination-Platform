@@ -4,7 +4,7 @@
 
 Communication infrastructure is often the first casualty during disasters, conflicts, and large-scale outages.
 
-ResQNet enables people to exchange critical information without internet access, cellular networks, servers, or cloud services.
+OfflineNet enables people to exchange critical information without internet access, cellular networks, servers, or cloud services.
 
 Messages are encoded into QR codes, transferred between devices through scanning, and stored locally, creating a decentralized communication network that continues operating even during complete connectivity blackouts.
 
@@ -12,7 +12,7 @@ Messages are encoded into QR codes, transferred between devices through scanning
 
 ## 📘 Overview
 
-ResQNet is built around a simple idea:
+OfflineNet is built around a simple idea:
 
 **Communication should remain possible even when the internet doesn't.**
 
