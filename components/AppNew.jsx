@@ -1,0 +1,584 @@
+/**
+ * App.jsx - OfflineNet Frontend (Complete Design Replacement)
+ * 
+ * Full replacement with exact HTML design structure
+ * All business logic preserved from original components
+ */
+
+import React, { useState, useCallback, useEffect } from 'react';
+import MessageCreator from './MessageCreator';
+import QRGenerator from './QRGenerator';
+import QRScanner from './QRScanner';
+import QRDataExtractor from './QRDataExtractor';
+import MessageFeed from './MessageFeed';
+import RAGChat from './RAGChat';
+import { getStorageStats } from '../utils/storage';
+
+export default function App() {
+  const [currentMessage, setCurrentMessage] = useState(null);
+  const [feedRefresh, setFeedRefresh] = useState(false);
+  const [toasts, setToasts] = useState([]);
+  const [activeTab, setActiveTab] = useState('create');
+  const [stats, setStats] = useState({ messages: 0, urgent: 0, avgHops: 0, trust: 0 });
+
+  useEffect(() => {
+    const loadStats = async () => {
+      const stats = await getStorageStats();
+      setStats(stats);
+    };
+    loadStats();
+  }, [feedRefresh]);
+
+  const handleMessageCreated = useCallback((message) => {
+    setCurrentMessage(message);
+    addToast(`MSG CREATED: ${message.id.slice(0, 8)}...— PROCEED TO GENERATE QR TAB`, 'success');
+  }, []);
+
+  const handleMessageScanned = useCallback((message) => {
+    setCurrentMessage(message);
+    setFeedRefresh((prev) => !prev);
+    addToast(`Message scanned! Hop: ${message.hop_count}`, 'success');
+  }, []);
+
+  const handleError = useCallback((error) => {
+    addToast(error, 'error');
+  }, []);
+
+  const handleDuplicate = useCallback((message) => {
+    addToast(`Duplicate: ${message.id.slice(0, 8)}...`, 'info');
+  }, []);
+
+  function addToast(message, type = 'info') {
+    const id = Date.now();
+    setToasts((prev) => [...prev, { id, message, type }]);
+    setTimeout(() => {
+      setToasts((prev) => prev.filter((t) => t.id !== id));
+    }, 3000);
+  }
+
+  return (
+    <div style={styles.app}>
+      <style>{`
+        @keyframes pulse {
+          0%, 100% { box-shadow: 0 0 0 3px rgba(57,211,83,0.08), 0 0 8px rgba(57,211,83,0.3); }
+          50% { box-shadow: 0 0 0 6px rgba(57,211,83,0.08), 0 0 16px rgba(57,211,83,0.5); }
+        }
+        @keyframes ticker {
+          from { transform: translateX(0); }
+          to { transform: translateX(-50%); }
+        }
+        @keyframes scan {
+          0% { top: 15%; }
+          50% { top: 85%; }
+          100% { top: 15%; }
+        }
+        @keyframes blink {
+          0%, 100% { opacity: 1; }
+          50% { opacity: 0; }
+        }
+        body::before {
+          content: '';
+          position: fixed;
+          inset: 0;
+          background: repeating-linear-gradient(
+            to bottom,
+            transparent 0px,
+            transparent 3px,
+            rgba(0,0,0,0.06) 3px,
+            rgba(0,0,0,0.06) 4px
+          );
+          pointer-events: none;
+          z-index: 9999;
+        }
+      `}</style>
+
+      {/* TICKER */}
+      <div style={styles.ticker}>
+        <div style={styles.tickerInner}>
+          <span style={styles.tickerItem}><span style={styles.tickerDot}>●</span> SYSTEM OFFLINE-READY</span>
+          <span style={styles.tickerItem}><span style={styles.tickerDot}>●</span> QR PROPAGATION ACTIVE</span>
+          <span style={styles.tickerItem}><span style={styles.tickerDot}>●</span> NO INTERNET REQUIRED</span>
+          <span style={styles.tickerItem}><span style={styles.tickerDot}>●</span> DEVICE-TO-DEVICE MESH</span>
+          <span style={styles.tickerItem}><span style={styles.tickerDot}>●</span> TRUST SCORING ENABLED</span>
+          <span style={styles.tickerItem}><span style={styles.tickerDot}>●</span> SYSTEM OFFLINE-READY</span>
+          <span style={styles.tickerItem}><span style={styles.tickerDot}>●</span> QR PROPAGATION ACTIVE</span>
+          <span style={styles.tickerItem}><span style={styles.tickerDot}>●</span> NO INTERNET REQUIRED</span>
+          <span style={styles.tickerItem}><span style={styles.tickerDot}>●</span> DEVICE-TO-DEVICE MESH</span>
+          <span style={styles.tickerItem}><span style={styles.tickerDot}>●</span> TRUST SCORING ENABLED</span>
+        </div>
+      </div>
+
+      {/* HEADER */}
+      <header style={styles.header}>
+        <div style={styles.headerLeft}>
+          <div style={styles.signalIcon}></div>
+          <div style={styles.headerTitle}>Offline<span style={styles.headerAccent}>Net</span></div>
+          <div style={styles.headerSub}>Emergency Communication Network</div>
+        </div>
+        <div style={styles.headerStatus}>
+          <div style={styles.statusPill}>
+            <div style={styles.statusDot}></div>
+            FULLY OFFLINE
+          </div>
+          <div style={styles.statusPill}>
+            <div style={styles.statusDot}></div>
+            DEVICE-TO-DEVICE
+          </div>
+          <div style={{ ...styles.statusPill, color: '#e8a020' }}>
+            <div style={{ ...styles.statusDot, backgroundColor: '#e8a020' }}></div>
+            QR PROPAGATION
+          </div>
+        </div>
+      </header>
+
+      {/* NAV */}
+      <nav style={styles.nav}>
+        {[
+          { id: 'create', label: 'Create' },
+          { id: 'generate', label: 'Generate QR' },
+          { id: 'scan', label: 'Scan QR' },
+          { id: 'feed', label: 'Feed' },
+          { id: 'rag', label: 'RAG Q&A' }
+        ].map((tab) => (
+          <button
+            key={tab.id}
+            onClick={() => setActiveTab(tab.id)}
+            style={{
+              ...styles.navTab,
+              ...(activeTab === tab.id ? styles.navTabActive : {})
+            }}
+          >
+            {tab.label}
+          </button>
+        ))}
+      </nav>
+
+      {/* MAIN LAYOUT */}
+      <div
+        style={{
+          ...styles.layout
+        }}
+      >
+        <main
+          style={{
+            ...styles.main
+          }}
+        >
+          {/* Toasts */}
+          {toasts.map((t) => (
+            <div key={t.id} style={{...styles.toast, backgroundColor: t.type === 'success' ? '#1a6628' : t.type === 'error' ? '#5a1a1a' : '#5c3f0a', borderColor: t.type === 'success' ? '#39d353' : t.type === 'error' ? '#e03c3c' : '#e8a020', color: t.type === 'success' ? '#39d353' : t.type === 'error' ? '#e03c3c' : '#e8a020', marginBottom: '20px'}}>
+              ▶ {t.message}
+            </div>
+          ))}
+
+          {/* CREATE TAB */}
+          {activeTab === 'create' && (
+            <div>
+              <div style={styles.sectionLabel}>// Message Compose<span style={{fontSize:'9px', color: '#3d4248', marginLeft: 'auto'}}>FIELD REPORT</span></div>
+              <MessageCreator onMessageCreated={handleMessageCreated} onError={handleError} />
+            </div>
+          )}
+
+          {/* GENERATE QR TAB */}
+          {activeTab === 'generate' && (
+            <div>
+              <div style={styles.sectionLabel}>// QR Code Generator<span style={{fontSize:'9px', color: '#39d353', marginLeft: 'auto'}}>VER ~~10</span></div>
+              {currentMessage ? (
+                <div>
+                  <QRGenerator message={currentMessage} />
+                  <hr style={styles.divider} />
+                  <div style={styles.sectionLabel}>// QR Data Extraction</div>
+                  <QRDataExtractor message={currentMessage} />
+                </div>
+              ) : (
+                <div style={styles.emptyCard}>No message. Create one in CREATE tab first.</div>
+              )}
+            </div>
+          )}
+
+          {/* SCAN QR TAB */}
+          {activeTab === 'scan' && (
+            <div>
+              <div style={styles.sectionLabel}>// QR Code Scanner</div>
+              <QRScanner onMessageScanned={handleMessageScanned} onError={handleError} onDuplicate={handleDuplicate} />
+            </div>
+          )}
+
+          {/* FEED TAB */}
+          {activeTab === 'feed' && (
+            <div>
+              <div style={styles.sectionLabel}>// Message Feed <span style={{color: '#39d353'}}>{stats.messages}</span></div>
+              <MessageFeed key={feedRefresh} />
+            </div>
+          )}
+
+          {/* RAG Q&A TAB */}
+          {activeTab === 'rag' && (
+            <div>
+              <div style={styles.sectionLabel}>// RAG Q&A System</div>
+              <RAGChat />
+            </div>
+          )}
+        </main>
+      </div>
+
+      {/* FOOTER STATUS BAR */}
+      <div style={styles.footer}>
+        <div style={styles.footerItem}>
+          <div style={styles.statusDot}></div>
+          FULLY OFFLINE
+        </div>
+        <div style={styles.footerItem}>
+          <div style={styles.statusDot}></div>
+          DEVICE-TO-DEVICE
+        </div>
+        <div style={styles.footerItem}>
+          <div style={{ ...styles.statusDot, backgroundColor: '#e8a020' }}></div>
+          QR-BASED PROPAGATION
+        </div>
+        <div style={styles.footerTime}>
+          OFFLINENET v1.0 — NO CLOUD DEPENDENCY
+        </div>
+      </div>
+    </div>
+  );
+}
+
+const styles = {
+  app: {
+    backgroundColor: '#0a0b0c',
+    color: '#d4d8dc',
+    fontFamily: "'Barlow', sans-serif",
+    minHeight: '100vh',
+    display: 'flex',
+    flexDirection: 'column',
+    paddingBottom: '40px'
+  },
+  ticker: {
+    backgroundColor: '#0d0e0f',
+    borderBottom: '1px solid #1e2124',
+    padding: '8px 12px',
+    overflow: 'hidden'
+  },
+  tickerInner: {
+    display: 'flex',
+    gap: '40px',
+    animation: 'ticker 20s linear infinite',
+    whiteSpace: 'nowrap'
+  },
+  tickerItem: {
+    fontFamily: "'Share Tech Mono', monospace",
+    fontSize: '10px',
+    letterSpacing: '0.12em',
+    textTransform: 'uppercase',
+    color: '#6b7280'
+  },
+  tickerDot: {
+    color: '#39d353',
+    marginRight: '8px'
+  },
+  header: {
+    backgroundColor: '#111214',
+    borderBottom: '1px solid #1e2124',
+    padding: '0 24px',
+    height: '52px',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between'
+  },
+  headerLeft: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '16px'
+  },
+  signalIcon: {
+    width: '28px',
+    height: '28px',
+    position: 'relative',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center'
+  },
+  headerTitle: {
+    fontFamily: "'Barlow Condensed', sans-serif",
+    fontWeight: 700,
+    fontSize: '20px',
+    letterSpacing: '0.08em',
+    textTransform: 'uppercase',
+    color: '#d4d8dc',
+    margin: 0
+  },
+  headerAccent: {
+    color: '#39d353'
+  },
+  headerSub: {
+    fontFamily: "'Share Tech Mono', monospace",
+    fontSize: '11px',
+    color: '#6b7280',
+    letterSpacing: '0.15em',
+    textTransform: 'uppercase',
+    borderLeft: '1px solid #2e3338',
+    paddingLeft: '16px',
+    marginLeft: '4px'
+  },
+  headerStatus: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '20px'
+  },
+  statusPill: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '6px',
+    fontFamily: "'Share Tech Mono', monospace",
+    fontSize: '10px',
+    letterSpacing: '0.12em',
+    textTransform: 'uppercase',
+    color: '#6b7280'
+  },
+  statusDot: {
+    width: '5px',
+    height: '5px',
+    borderRadius: '50%',
+    backgroundColor: '#39d353'
+  },
+  nav: {
+    backgroundColor: '#111214',
+    borderBottom: '1px solid #1e2124',
+    padding: '0 24px',
+    display: 'flex',
+    gap: 0
+  },
+  navTab: {
+    padding: '14px 22px',
+    fontFamily: "'Barlow Condensed', sans-serif",
+    fontSize: '14px',
+    fontWeight: 600,
+    letterSpacing: '0.1em',
+    textTransform: 'uppercase',
+    color: '#6b7280',
+    cursor: 'pointer',
+    border: 'none',
+    background: 'none',
+    borderBottom: '2px solid transparent',
+    transition: 'all 0.15s',
+    display: 'flex',
+    alignItems: 'center',
+    gap: '8px'
+  },
+  navTabActive: {
+    color: '#39d353',
+    borderBottomColor: '#39d353'
+  },
+  layout: {
+    display: 'grid',
+    gap: 0,
+    flex: 1,
+    overflow: 'hidden',
+    gridTemplateColumns: '1fr'
+  },
+  main: {
+    padding: '28px',
+    overflowY: 'auto',
+    backgroundColor: '#0a0b0c',
+    borderRight: 'none',
+    maxWidth: '1200px',
+    width: '100%',
+    margin: '0 auto'
+  },
+  sectionLabel: {
+    fontFamily: "'Share Tech Mono', monospace",
+    fontSize: '13px',
+    letterSpacing: '0.2em',
+    textTransform: 'uppercase',
+    color: '#6b7280',
+    borderLeft: '3px solid #39d353',
+    paddingLeft: '12px',
+    marginBottom: '24px',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between'
+  },
+  sidebarPanel: {
+    backgroundColor: '#161819',
+    border: '1px solid #1e2124',
+    padding: '18px',
+    marginBottom: '24px'
+  },
+  toast: {
+    backgroundColor: '#1a6628',
+    border: '1px solid #39d353',
+    padding: '12px 16px',
+    fontFamily: "'Share Tech Mono', monospace",
+    fontSize: '12px',
+    letterSpacing: '0.08em',
+    color: '#39d353',
+    display: 'flex',
+    alignItems: 'center',
+    gap: '10px',
+    borderRadius: '4px'
+  },
+  statGrid: {
+    display: 'grid',
+    gridTemplateColumns: '1fr 1fr',
+    gap: '12px',
+    marginBottom: '24px'
+  },
+  statBox: {
+    backgroundColor: '#0d0e0f',
+    border: '1px solid #1e2124',
+    padding: '14px',
+    textAlign: 'center'
+  },
+  statVal: {
+    fontFamily: "'Share Tech Mono', monospace",
+    fontSize: '26px',
+    color: '#39d353',
+    lineHeight: 1,
+    marginBottom: '6px'
+  },
+  statKey: {
+    fontFamily: "'Share Tech Mono', monospace",
+    fontSize: '11px',
+    letterSpacing: '0.15em',
+    textTransform: 'uppercase',
+    color: '#3d4248'
+  },
+  stepList: {
+    listStyle: 'none',
+    padding: 0,
+    margin: 0,
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '4px'
+  },
+  stepItem: {
+    display: 'flex',
+    gap: '12px',
+    marginBottom: '16px',
+    alignItems: 'flex-start'
+  },
+  stepNum: {
+    fontFamily: "'Share Tech Mono', monospace",
+    fontSize: '11px',
+    color: '#39d353',
+    backgroundColor: '#1a6628',
+    width: '24px',
+    height: '24px',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexShrink: 0,
+    marginTop: '2px',
+    borderRadius: '2px'
+  },
+  stepText: {
+    fontSize: '14px',
+    color: '#6b7280',
+    lineHeight: '1.6',
+    fontFamily: "'Barlow', sans-serif"
+  },
+  importMethod: {
+    display: 'flex',
+    gap: '12px',
+    alignItems: 'flex-start',
+    paddingBottom: '14px',
+    marginBottom: '12px',
+    borderBottom: '1px solid #1e2124'
+  },
+  importMethodIcon: {
+    fontFamily: "'Share Tech Mono', monospace",
+    fontSize: '10px',
+    letterSpacing: '0.1em',
+    color: '#6b7280',
+    textTransform: 'uppercase',
+    border: '1px solid #1e2124',
+    padding: '4px 6px',
+    whiteSpace: 'nowrap',
+    marginTop: '2px',
+    minWidth: '34px',
+    textAlign: 'center'
+  },
+  importMethodInfo: {},
+  importMethodName: {
+    fontFamily: "'Barlow Condensed', sans-serif",
+    fontSize: '15px',
+    fontWeight: 600,
+    letterSpacing: '0.05em',
+    color: '#d4d8dc',
+    marginBottom: '4px'
+  },
+  importMethodDesc: {
+    fontSize: '13px',
+    color: '#6b7280',
+    lineHeight: '1.5',
+    fontFamily: "'Barlow', sans-serif"
+  },
+  systemStatus: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '8px'
+  },
+  statusLine: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingBottom: '8px',
+    marginBottom: '8px',
+    borderBottom: '1px solid rgba(30, 33, 36, 0.5)'
+  },
+  statusLabel: {
+    fontFamily: "'Share Tech Mono', monospace",
+    fontSize: '11px',
+    color: '#6b7280',
+    letterSpacing: '0.1em',
+    textTransform: 'uppercase'
+  },
+  footer: {
+    backgroundColor: '#111214',
+    borderTop: '1px solid #1e2124',
+    padding: '8px 24px',
+    display: 'flex',
+    alignItems: 'center',
+    gap: '24px',
+    position: 'fixed',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    zIndex: 100
+  },
+  footerItem: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '6px',
+    fontFamily: "'Share Tech Mono', monospace",
+    fontSize: '10px',
+    letterSpacing: '0.12em',
+    textTransform: 'uppercase',
+    color: '#6b7280'
+  },
+  footerTime: {
+    marginLeft: 'auto',
+    fontFamily: "'Share Tech Mono', monospace",
+    fontSize: '10px',
+    color: '#3d4248',
+    letterSpacing: '0.1em'
+  },
+  divider: {
+    border: 'none',
+    borderTop: '1px solid #1e2124',
+    margin: '20px 0',
+    padding: 0,
+    height: 0
+  },
+  emptyCard: {
+    backgroundColor: '#161819',
+    border: '1px solid #1e2124',
+    padding: '50px 25px',
+    textAlign: 'center',
+    color: '#6b7280',
+    fontFamily: "'Share Tech Mono', monospace",
+    fontSize: '13px',
+    lineHeight: '1.6'
+  }
+};
