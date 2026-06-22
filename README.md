@@ -1,199 +1,130 @@
-# 🌐 OfflineNet — QR-Based Emergency Communication System
+# 🌐 OfflineNet
 
-## 🚨 Problem Statement
+### An offline emergency communication network powered by QR codes
 
-In war zones and disaster scenarios, **internet and communication infrastructure often fail**.
+Communication infrastructure is often the first casualty during disasters, conflicts, and large-scale outages.
 
-This leads to:
+ResQNet enables people to exchange critical information without internet access, cellular networks, servers, or cloud services.
 
-* No access to emergency updates
-* Inability to share critical information
-* Lack of coordination for food, medical aid, and evacuation
-* Spread of misinformation without verification
-
-There is a need for a **fully offline, decentralized communication system** that works without servers or internet.
+Messages are encoded into QR codes, transferred between devices through scanning, and stored locally, creating a decentralized communication network that continues operating even during complete connectivity blackouts.
 
 ---
 
-## 💡 Solution
+## 📘 Overview
 
-OfflineNet is an **offline-first emergency communication network** where:
+ResQNet is built around a simple idea:
 
-* 📱 Devices act as nodes
-* 👥 Humans act as routers
-* 🧾 Messages act as packets
-* 🔲 QR codes act as the transport layer
+**Communication should remain possible even when the internet doesn't.**
 
-### 🔁 Core Idea:
+Instead of relying on network infrastructure, information moves directly between devices through QR codes.
 
-Messages are created → converted into QR → scanned by another device → stored locally → propagated further.
-
-✅ No internet required
-✅ No server dependency
-✅ Works in complete network blackout
+Each device becomes a communication node capable of creating, receiving, storing, and forwarding messages.
 
 ---
 
-## 🧰 Tech Stack
+## ✨ Key Features
 
-### Frontend
+### 📡 Fully Offline Communication
 
-* React 18
+No internet connection, backend server, or cloud infrastructure required.
+
+### 🔲 QR-Based Message Transfer
+
+Messages are converted into QR codes and exchanged directly between devices.
+
+### 🔄 Decentralized Information Sharing
+
+Every device can receive and forward messages, allowing information to spread organically across communities.
+
+### 🛡️ Message Validation
+
+Incoming messages are verified against a predefined schema before being accepted.
+
+### 🚫 Duplicate Protection
+
+Prevents the same message from being repeatedly propagated across the network.
+
+### 📈 Hop Count Tracking
+
+Tracks how many devices a message has passed through during distribution.
+
+### 💾 Local Storage
+
+Messages persist locally on the device even after the application is closed.
+
+---
+
+## 🧠 How It Works
+
+1. User creates a message
+2. Message is assigned a unique identifier
+3. Message is encoded into a QR code
+4. Another device scans the QR code
+5. Message is validated and stored locally
+6. The receiving device can forward the message further
+
+The result is a human-powered communication network capable of functioning without traditional infrastructure.
+
+---
+
+## 🚨 Use Cases
+
+* Disaster response
+* Flood and earthquake recovery
+* Conflict zones
+* Emergency shelters
+* Rural and remote communities
+* Temporary network outages
+* Humanitarian operations
+
+---
+
+## 🛠️ Tech Stack
+
+**Frontend**
+
+* React
 * Vite
 
-### Core Libraries
+**QR Communication**
 
-* `qrcode` → QR generation
-* `html5-qrcode` → QR scanning
-* `uuid` → Unique message IDs
+* qrcode
+* html5-qrcode
 
-### Storage
+**Data Management**
 
-* localStorage (offline persistence)
+* UUID
+* localStorage
 
-### Browser APIs
+**Browser APIs**
 
-* Camera (QR scanning)
-* Canvas (QR rendering)
-
----
-
-## 📁 File Structure
-
-```
-/
-├── package.json
-├── README.md
-│
-├── /utils
-│   ├── messageSchema.js     # Message creation & validation
-│   ├── storage.js           # Local storage + deduplication
-│   └── qrCodec.js           # Encode/decode messages (Base64)
-│
-└── /components
-    ├── App.jsx              # Main app controller
-    ├── MessageCreator.jsx   # Create message form
-    ├── QRGenerator.jsx      # Generate QR code
-    ├── QRScanner.jsx        # Scan QR code
-    └── MessageFeed.jsx      # Display messages
-```
+* Camera Access
+* Canvas Rendering
 
 ---
 
-## 🔄 Data Flow
+## 🚀 Getting Started
 
-### 📱 Device A (Sender)
-
-User creates message
-↓
-Message is validated
-↓
-UUID generated
-↓
-Saved to localStorage
-↓
-Encoded into Base64
-↓
-Converted to QR code
-↓
-User shares QR
-
----
-
-### 📱 Device B (Receiver)
-
-User scans QR
-↓
-QR → Base64 decoded
-↓
-JSON parsed
-↓
-Schema validated
-↓
-Duplicate check
-↓
-Hop count incremented
-↓
-Saved to localStorage
-↓
-Displayed in feed
-
----
-
-## ⚙️ Setup Instructions
-
-### ✅ Prerequisites
-
-* Node.js 16+
-* Modern browser (camera required for scanning)
-
----
-
-### 📦 Installation
+### Install Dependencies
 
 ```bash
 npm install
 ```
 
----
-
-### ▶️ Run Development Server
+### Start Development Server
 
 ```bash
 npm run dev
 ```
 
----
-
-### 🏗️ Build for Production
+### Build for Production
 
 ```bash
 npm run build
 ```
 
----
-
-### 📷 Browser Permissions
-
-* Camera access is required for QR scanning
-* Browser will prompt on first use
+Open the application in a modern browser and allow camera access when prompted for QR scanning.
 
 ---
 
-## 🎯 Key Features
-
-* 🔌 Fully offline (no backend)
-* 🔁 QR-based message transfer
-* 🧠 Structured message schema
-* 🔄 Hop count tracking (network propagation)
-* 🚫 Duplicate prevention
-* 📊 Local message feed
-
----
-
-## 🧠 System Insight
-
-This system behaves like a **distributed network without internet**:
-
-* Each phone stores and forwards data
-* Messages spread physically across devices
-* Information persists even without connectivity
-
----
-
-## 🚀 Future Enhancements
-
-* IndexedDB (scalable storage)
-* AI classification (Claude / LLM)
-* Trust scoring system
-* Encryption for sensitive messages
-
----
-
-## 📄 License
-
-MIT — Free for humanitarian and emergency use
-
----
-
-**Built for resilience. Designed for real-world crises.**
+### Built for situations where connectivity cannot be assumed.
